@@ -12,6 +12,7 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Processing;
 using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.Formats.Webp;
+using System.Text.RegularExpressions;
 
 [assembly: InternalsVisibleTo("AuraImageVariants.Tests")]
 namespace AuraImageVariants;
@@ -38,9 +39,18 @@ public static class Functions
 
             var blobCreationEvent = eventGridEvent.Data.ToObjectFromJson<StorageBlobCreatedEventData>();
             var fileExtension = Path.GetExtension(blobCreationEvent.Url).Replace(".", string.Empty);
+            
+            // If the input file extension is not something we support, end the function.
+            if (!Regex.IsMatch(fileExtension, "gif|png|jpe?g|webp", RegexOptions.IgnoreCase))
+                return;
 
-            // If the file extension isn't of a supported format, we don't process it.
-            var encoder = GetEncoder(fileExtension);
+
+            var convertTo = Environment.GetEnvironmentVariable("AIV_OUTPUT_TYPE");
+            if (convertTo is not null)
+                fileExtension = convertTo;
+
+            // If the file extension isn't of a supported format, end the function.
+            var encoder = GetEncoder(fileExtension.ToLower());
             if (encoder is null)
                 return;
 
