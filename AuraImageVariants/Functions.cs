@@ -22,6 +22,7 @@ public static class Functions
     private const char Terminator = ';';
     private const char OptionSeparator = ',';
     private const char PropertySeparator = '=';
+    private const string DefaultVariantNameSeparator = "_";
 
     private static readonly string WidthProperty = "w" + PropertySeparator;
     private static readonly string HeightProperty = "p" + PropertySeparator;
@@ -67,6 +68,8 @@ public static class Functions
             var blobContainerClient = blobServiceClient.GetBlobContainerClient(outputContainerName);
             var blobName = Path.GetFileNameWithoutExtension(originalBlobClient.Name);
 
+            string variantSeparator = Environment.GetEnvironmentVariable("AIV_VARIANT_NAME_SEPARATOR") ?? DefaultVariantNameSeparator;
+
             var variantsString = Environment.GetEnvironmentVariable("AIV_VARIANTS");
             var variants = variantsString is not null ? Parse(variantsString) : new VariantInfo[] { new VariantInfo() };
             foreach (var variant in variants)
@@ -77,7 +80,7 @@ public static class Functions
                 image.Mutate(ctx => ctx.Resize(newSize));
                 image.Save(outputStream, encoder);
                 outputStream.Position = 0; // Reset the stream position so it can be properly uploaded
-                await blobContainerClient.UploadBlobAsync($"{blobName}_{variant.Name}.{fileExtension}", outputStream);
+                await blobContainerClient.UploadBlobAsync($"{blobName}{variantSeparator}{variant.Name}.{fileExtension}", outputStream);
             }
         }
         catch (Exception e)
