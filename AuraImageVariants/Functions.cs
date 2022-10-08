@@ -9,10 +9,8 @@ using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using SixLabors.ImageSharp.Formats.Webp;
 
 [assembly: InternalsVisibleTo("AuraImageVariants.Tests")]
