@@ -100,7 +100,7 @@ public static class Functions
         if (variantStrings.Length == 0) // We don't need to allocate an empty array each time.
             return Array.Empty<VariantInfo>();
 
-        VariantInfo[] variants = new VariantInfo[variantStrings.Length];
+        List<VariantInfo> variants = new();
         for (int i = 0; i < variantStrings.Length; i++)
         {
             VariantInfo variant = new();
@@ -131,9 +131,14 @@ public static class Functions
                     variant.Name = nameStr;
                 }
             }
-            variants[i] = variant;
+
+            // Prevent duplicates from being added.
+            if (variants.Any(v => v.Name.Equals(variant.Name, StringComparison.OrdinalIgnoreCase)))
+                break;
+
+            variants.Add(variant);
         }
-        return variants.DistinctBy(v => v.Name).ToArray();
+        return variants.ToArray();
     }
 
     internal static Size GetResizedDimensions(Size originalSize, int? targetWidth, int? targetHeight)
