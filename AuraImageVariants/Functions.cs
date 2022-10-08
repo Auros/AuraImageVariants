@@ -45,7 +45,6 @@ public static class Functions
             if (!Regex.IsMatch(fileExtension, "gif|png|jpe?g|webp", RegexOptions.IgnoreCase))
                 return;
 
-
             var convertTo = Environment.GetEnvironmentVariable("AIV_OUTPUT_TYPE");
             if (convertTo is not null)
                 fileExtension = convertTo;

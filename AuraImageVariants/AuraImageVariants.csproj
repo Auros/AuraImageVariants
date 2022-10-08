@@ -3,7 +3,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TargetFramework>net6.0</TargetFramework>
-    <AzureFunctionsVersion>v2</AzureFunctionsVersion>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <UserSecretsId>febb6e6c-1c7d-474a-9cb3-b2a82dff9aae</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.13.1" />
