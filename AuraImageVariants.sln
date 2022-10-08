@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.32916.344
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuraImageVariants", "AuraImageVariants\AuraImageVariants.csproj", "{7A25C4C4-F72D-42A3-A2A3-C692040285CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuraImageVariants", "AuraImageVariants\AuraImageVariants.csproj", "{7A25C4C4-F72D-42A3-A2A3-C692040285CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuraImageVariants.Tests", "AuraImageVariants.Tests\AuraImageVariants.Tests.csproj", "{309F53B9-EE71-495A-92C0-652F4653DB75}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{7A25C4C4-F72D-42A3-A2A3-C692040285CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A25C4C4-F72D-42A3-A2A3-C692040285CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A25C4C4-F72D-42A3-A2A3-C692040285CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{309F53B9-EE71-495A-92C0-652F4653DB75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{309F53B9-EE71-495A-92C0-652F4653DB75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{309F53B9-EE71-495A-92C0-652F4653DB75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{309F53B9-EE71-495A-92C0-652F4653DB75}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

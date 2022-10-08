@@ -25,7 +25,7 @@ public static class Functions
     private const string DefaultVariantNameSeparator = "_";
 
     private static readonly string WidthProperty = "w" + PropertySeparator;
-    private static readonly string HeightProperty = "p" + PropertySeparator;
+    private static readonly string HeightProperty = "h" + PropertySeparator;
     private static readonly string NameProperty = "name" + PropertySeparator;
 
     private static readonly string BLOB_STORAGE_CONNECTION_STRING = Environment.GetEnvironmentVariable("AzureWebJobsStorage")!;
@@ -72,6 +72,7 @@ public static class Functions
 
             var variantsString = Environment.GetEnvironmentVariable("AIV_VARIANTS");
             var variants = variantsString is not null ? Parse(variantsString) : new VariantInfo[] { new VariantInfo() };
+
             foreach (var variant in variants)
             {
                 using MemoryStream outputStream = new();
@@ -92,7 +93,13 @@ public static class Functions
 
     internal static VariantInfo[] Parse(string rawVariantString)
     {
+        // Remove all spaces, as they are banned for the variant string.
+        rawVariantString = rawVariantString.Replace(" ", string.Empty);
+
         var variantStrings = rawVariantString.Split(Terminator, StringSplitOptions.RemoveEmptyEntries);
+        if (variantStrings.Length == 0) // We don't need to allocate an empty array each time.
+            return Array.Empty<VariantInfo>();
+
         VariantInfo[] variants = new VariantInfo[variantStrings.Length];
         for (int i = 0; i < variantStrings.Length; i++)
         {
@@ -108,25 +115,25 @@ public static class Functions
                 if (option.StartsWith(WidthProperty))
                 {
                     // Width
-                    var widthStr = option[(WidthProperty.Length - 1)..];
+                    var widthStr = option[WidthProperty.Length..];
                     variant.Width = Convert.ToInt32(widthStr);
                 }
                 else if (option.StartsWith(HeightProperty))
                 {
                     // Height
-                    var heightStr = option[(HeightProperty.Length - 1)..];
+                    var heightStr = option[HeightProperty.Length..];
                     variant.Height = Convert.ToInt32(heightStr);
                 }
                 else if (option.StartsWith(NameProperty))
                 {
                     // Name
-                    var nameStr = option[(NameProperty.Length - 1)..];
+                    var nameStr = option[NameProperty.Length..];
                     variant.Name = nameStr;
                 }
             }
             variants[i] = variant;
         }
-        return variants;
+        return variants.DistinctBy(v => v.Name).ToArray();
     }
 
     internal static Size GetResizedDimensions(Size originalSize, int? targetWidth, int? targetHeight)
@@ -136,6 +143,14 @@ public static class Functions
             return originalSize;
 
         var targetIsComplete = targetWidth.HasValue && targetHeight.HasValue;
+
+        // Do not resize to zero.
+        if ((targetWidth.HasValue && targetWidth.Value <= 0) || (targetHeight.HasValue && targetHeight.Value <= 0))
+            return originalSize;
+
+        // Do not resize complete images that are smaller than the requested target.
+        if (targetIsComplete && (targetWidth!.Value > originalSize.Width || targetHeight!.Value > originalSize.Height))
+            return originalSize;
 
         // If the target width is larger than or the same size as the original, return the original.
         if (!targetIsComplete && targetWidth.HasValue && targetWidth.Value >= originalSize.Width)
@@ -156,7 +171,7 @@ public static class Functions
         return new Size(Convert.ToInt32(actualWidth), Convert.ToInt32(actualHeight));
     }
 
-    private static IImageEncoder? GetEncoder(string extension)
+    internal static IImageEncoder? GetEncoder(string extension)
     {
         return extension switch
         {
