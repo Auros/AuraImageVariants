@@ -31,16 +31,18 @@ public static class Functions
     private static readonly string BLOB_STORAGE_CONNECTION_STRING = Environment.GetEnvironmentVariable("AzureWebJobsStorage")!;
 
     [FunctionName("AuraVariantGenerator")]
-    public static async Task Run([EventGridTrigger] EventGridEvent eventGridEvent, [Blob("{data.url}", FileAccess.Read)] Stream inputStream, ILogger logger)
+    public static async Task Run([EventGridTrigger] EventGridEvent eventGridEvent, [Blob("{data.url}", FileAccess.Read)] Stream input, ILogger logger)
     {
         try
         {
-            if (inputStream is null)
+            if (input is null)
                 return;
 
+            logger.LogInformation("Reading blob creation info");
             var blobCreationEvent = eventGridEvent.Data.ToObjectFromJson<StorageBlobCreatedEventData>();
             var fileExtension = Path.GetExtension(blobCreationEvent.Url).Replace(".", string.Empty);
-            
+            logger.LogInformation("Blob Url {BlobName}", blobCreationEvent.Url);
+
             // If the input file extension is not something we support, end the function.
             if (!Regex.IsMatch(fileExtension, "gif|png|jpe?g|webp", RegexOptions.IgnoreCase))
                 return;
@@ -49,18 +51,13 @@ public static class Functions
             if (convertTo is not null)
                 fileExtension = convertTo;
 
+            logger.LogInformation("Acquiring encoder");
             // If the file extension isn't of a supported format, end the function.
             var encoder = GetEncoder(fileExtension.ToLower());
             if (encoder is null)
                 return;
 
             var originalBlobClient = new BlobClient(new Uri(blobCreationEvent.Url));
-            var containersString = Environment.GetEnvironmentVariable("AIV_INPUT_CONTAINERS");
-            
-            // Check if the blob's container matches the ones we're listening for
-            if (containersString is not null && !containersString.Split(Terminator, StringSplitOptions.RemoveEmptyEntries).Any(c => c.Equals(originalBlobClient.BlobContainerName, StringComparison.OrdinalIgnoreCase)))
-                return;
-
             var outputContainerName = Environment.GetEnvironmentVariable("AIV_OUTPUT_CONTAINER") ?? originalBlobClient.BlobContainerName;
 
             var blobServiceClient = new BlobServiceClient(BLOB_STORAGE_CONNECTION_STRING);
@@ -72,15 +69,20 @@ public static class Functions
             var variantsString = Environment.GetEnvironmentVariable("AIV_VARIANTS");
             var variants = variantsString is not null ? Parse(variantsString) : new VariantInfo[] { new VariantInfo() };
 
+            logger.LogInformation("Starting variant construction");
             foreach (var variant in variants)
             {
+                input.Position = 0;
                 using MemoryStream outputStream = new();
-                using Image image = Image.Load(inputStream);
+                using Image image = Image.Load(input);
                 var newSize = GetResizedDimensions(image.Size(), variant.Width, variant.Height);
                 image.Mutate(ctx => ctx.Resize(newSize));
                 image.Save(outputStream, encoder);
                 outputStream.Position = 0; // Reset the stream position so it can be properly uploaded
-                await blobContainerClient.UploadBlobAsync($"{blobName}{variantSeparator}{variant.Name}.{fileExtension}", outputStream);
+
+                var finalBlobName = $"{blobName}{variantSeparator}{variant.Name}.{fileExtension}";
+                logger.LogInformation("Uploading {BlobName}", finalBlobName);
+                await blobContainerClient.UploadBlobAsync(finalBlobName, outputStream);
             }
         }
         catch (Exception e)
